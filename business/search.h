@@ -10,7 +10,6 @@ public:
     SearchService();
     el::Logger* logger;
 
-    bool prepareSearch();
     bool search();
 };
 

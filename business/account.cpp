@@ -8,29 +8,6 @@ AccountService::AccountService()
     gState = OFFLINE;
 }
 
-bool AccountService::prepareLogin()
-{
-    if(gState != State::OFFLINE){
-        logger->warn("login failed,account state is not OFFLINE.");
-        return false;
-    }
-    logger->info("prepare to login...");
-    gBrowser->webViewLoadLoginPage();
-    gState = State::PREPARE_LOGIN;
-    return true;
-}
-
-bool AccountService::prepareLogout()
-{
-    if(gState == OFFLINE){
-        logger->warn("logout failed,account state is OFFLINE");
-        return false;
-    }
-    logger->info("prepare to logout...");
-    gBrowser->webViewLoadWelcomePage();
-    gState = PREPARELOGOUT;
-    return true;
-}
 
 bool AccountService::login()
 {
@@ -48,20 +25,9 @@ bool AccountService::logout()
 {
     /* 自动点击登出 */
     logger->info("logout...");
-    gState = OFFLINE;
     return true;
 }
 
-void AccountService::successLogin()
-{
-    logger->info("finished login.");
-}
-
-void AccountService::successLogout()
-{
-    gState = OFFLINE;
-    logger->info("finished logout.");
-}
 
 bool AccountService::setTimerToShare()
 {

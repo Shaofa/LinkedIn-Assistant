@@ -14,21 +14,21 @@ enum State
 
     /* login */
     PREPARE_LOGIN,
-    BEGIN_LOGIN,
+    REQUEST_LOGIN,
     SUCCESS_LOGIN,
     FAILED_LOGIN,
 
     /* logout */
     PREPARE_LOGOUT,
-    BEGIN_LOGOUT,
+    REQUEST_LOGOUT,
     SUCCESS_LOGOUT,
     FAILED_LOGOUT,
 
     /* search */
     PREPARE_SEARCH,
-    BEGIN_SEARCH,
-    FAILED_SEARCH,
-    SUCCESS_SEARCH
+    REQUEST_SEARCH,
+    SUCCESS_SEARCH,
+    FAILED_SEARCH
 };
 
 extern State gState;

@@ -51,28 +51,34 @@ Browser::~Browser()
 void Browser::onButtonLoginClicked()
 {
     logger->info("clicked login button.");
-    if(!gAccountService->prepareLogin()) {
-        logger->warn("login failed.");
-        QMessageBox::information(NULL,"info","登录失败!",QMessageBox::Ok);
+    if(gState != State::OFFLINE){
+        logger->warn("login failed,account state is not OFFLINE.");
+        QMessageBox::information(NULL,"info","login failed!",QMessageBox::Ok);
+        return;
     }
-    else{
-        ui->tabWidget->setCurrentIndex(0);
-        ui->buttonLogin->setDisabled(true);
-        ui->buttonLogout->setEnabled(true);
-    }
+    gState = State::PREPARE_LOGIN;
+    logger->info("prepare to login...");
+    ui->webView->setUrl(QUrl(AppConfigure::app_url_login));
+
+    ui->tabWidget->setCurrentIndex(0);
+    ui->buttonLogin->setDisabled(true);
+    ui->buttonLogout->setEnabled(true);
 }
 
 void Browser::onButtonLogoutClicked()
 {
     logger->info("clicked logout button.");
-    if(!gAccountService->prepareLogout()){
-        logger->warn("logout failed.");
-        QMessageBox::information(NULL,"info","注销失败!",QMessageBox::Ok);
+    if(gState == OFFLINE){
+        logger->warn("logout failed,account state is OFFLINE");
+        QMessageBox::information(NULL,"info","logout failed!",QMessageBox::Ok);
+        return;
     }
-    else{
-        ui->buttonLogin->setEnabled(true);
-        ui->buttonLogout->setDisabled(true);
-    }
+    gState = State::PREPARE_LOGOUT;
+    logger->info("prepare to logout...");
+    ui->webView->setUrl(QUrl(AppConfigure::app_url_welcome));
+
+    ui->buttonLogin->setEnabled(true);
+    ui->buttonLogout->setDisabled(true);
 }
 
 void Browser::onButtonShareClicked()
@@ -84,10 +90,15 @@ void Browser::onButtonShareClicked()
 void Browser::onButtonAddClicked()
 {
     logger->info("clicked add button.");
-    if(!gSearchService->prepareSearch()){
-        logger->warn("prepare search failed.");
-        QMessageBox::information(NULL,"info","搜索失败",QMessageBox::Ok);
+
+    if(gState != State::ONLINE) {
+        logger->warn("prepareSearch failed: State is not ONLINE!");
+        QMessageBox::information(NULL,"info","search failed!",QMessageBox::Ok);
+        return;
     }
+    gState = State::PREPARE_SEARCH;
+    logger->info("prepare to search...");
+    ui->webView->setUrl(QUrl(AppConfigure::app_url_search));
 }
 
 void Browser::onTimerTimeout()
@@ -118,38 +129,38 @@ void Browser::onWebViewLoadFinished(bool ok)
         switch (gState) {
         case State::PREPARE_LOGIN:{
             gAccountService->login();
-            gState = State::BEGIN_LOGIN;
+            gState = State::REQUEST_LOGIN;
             ui->buttonLogin->setDisabled(true);
             ui->buttonLogout->setEnabled(true);
             break;
         }
-        case State::BEGIN_LOGIN:{
-            gAccountService->successLogin();
+        case State::REQUEST_LOGIN:{
             gState = State::SUCCESS_LOGIN;
+            gState = State::ONLINE;
             ui->buttonLogin->setDisabled(true);
             ui->buttonLogout->setEnabled(true);
             break;
         }
-        case State::PREPARELOGOUT:{
+        case State::PREPARE_LOGOUT:{
             gAccountService->logout();
+            gState = State::SUCCESS_LOGOUT;
+            gState = State::OFFLINE;
             ui->buttonLogin->setEnabled(true);
             ui->buttonLogout->setDisabled(true);
             break;
         }
-        case State::LOGIN:{
-            gAccountService->successLogin();
-            ui->buttonLogin->setDisabled(true);
-            ui->buttonLogout->setEnabled(true);
-            break;
-        }
-        case State::PREPARESEARCH:{
-            break;
-        }
-        case State::LOGOUT:{
-            gAccountService->successLogout();
+        case State::REQUEST_LOGOUT:{
+            gState = State::SUCCESS_LOGOUT;
             ui->buttonLogin->setEnabled(true);
             ui->buttonLogout->setDisabled(true);
             break;
+        }
+        case State::PREPARE_SEARCH:{
+            gSearchService->search();
+            gState = State::REQUEST_SEARCH;
+        }
+        case State::REQUEST_SEARCH:{
+            gState = State::SUCCESS_SEARCH;
         }
         default:
             break;
@@ -177,14 +188,11 @@ void Browser::onWebViewTitleChanged(const QString &title)
 
 void Browser::webViewLoadLoginPage()
 {
-    ui->webView->setUrl(QUrl(AppConfigure::app_url_login));
-    logger->info("loading login page...");
 }
 
 void Browser::webViewLoadWelcomePage()
 {
-    ui->webView->setUrl(QUrl(AppConfigure::app_url_welcome));
-    logger->info("loading welcome page...");
+
 }
 
 
@@ -195,8 +203,7 @@ void Browser::webViewLoadHomePage()
 
 void Browser::webViewLoadSearchPage()
 {
-    ui->webView->setUrl(QUrl(AppConfigure::app_url_search));
-    logger->info("loading search page....");
+
 }
 
 QWebFrame *Browser::mainFrame()
