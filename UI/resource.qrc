@@ -1,0 +1,16 @@
+<RCC>
+    <qresource prefix="/icon">
+        <file>res/export.png</file>
+        <file>res/import.png</file>
+        <file>res/login.png</file>
+        <file>res/logout.png</file>
+        <file>res/setting.png</file>
+        <file>res/sync.png</file>
+        <file>res/add.png</file>
+        <file>res/follow.png</file>
+        <file>res/share.png</file>
+    </qresource>
+    <qresource prefix="/html">
+        <file>res/welcome.html</file>
+    </qresource>
+</RCC>
